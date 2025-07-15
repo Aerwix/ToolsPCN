@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte Diario</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .section {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .calentador-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 5px 5px 5px 0;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background: #222;
+      color: #0f0;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reporte Diario</h1>
+
+  <div class="section">
+    <label>Turno</label>
+    <select id="turno">
+      <option value="Matutino">Matutino</option>
+      <option value="Vespertino">Vespertino</option>
+      <option value="Nocturno">Nocturno</option>
+    </select>
+
+    <label>¿Cae Agua?</label>
+    <select id="agua">
+      <option value="SÍ">SÍ</option>
+      <option value="NO">NO</option>
+    </select>
+
+    <label>Recirculador</label>
+    <select id="recirculador">
+      <option>ENCENDIDO</option>
+      <option>APAGADO</option>
+    </select>
+
+    <label>Tinacos Grandes</label>
+    <select id="tinacosGrandes">
+      <option>LLENOS</option>
+      <option>VACÍOS</option>
+    </select>
+
+    <label>Tinacos Chicos</label>
+    <select id="tinacosChicos">
+      <option>LLENOS</option>
+      <option>VACÍOS</option>
+    </select>
+
+    <label>Cisterna</label>
+    <select id="cisterna">
+      <option>LLENA</option>
+      <option>MEDIA</option>
+      <option>VACÍA</option>
+    </select>
+
+    <p>Calentadores: <strong>Se quedan dos fijos</strong></p*>
+    <div class="calentador-group">
+      <label>Calentador #1<select id="cal1">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
+      <label>Calentador #2<select id="cal2">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
+      <label>Calentador #3<select id="cal3">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
+      <label>Calentador #4<select id="cal4">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
+      <label>Calentador #5<select id="cal5">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
+      <label>Calentador #6<select id="cal6">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
+    </div>
+
+    <label>Tanque de Gas #1</label>
+    <input type="text" id="gas1" placeholder="Porcentaje ej. 57">
+
+    <label>Tanque de Gas #2</label>
+    <input type="text" id="gas2" placeholder="Porcentaje ej. 82">
+
+    <label>Dispensadores</label>
+    <select id="dispensadores">
+      <option>CARGADOS</option>
+      <option>VACÍOS</option>
+    </select>
+
+    <label>Estacionamiento Posada del Cafeto</label>
+    <textarea id="estacionamiento1" rows="3">- Nissan TIDA Negro (Hab 135)
+- Camioneta Blanca Hab 126</textarea>
+
+    <label>Estacionamiento Niebla</label>
+    <textarea id="estacionamiento2" rows="2">- Camioneta Gris Jeep 36F-896 (Hab. 204)</textarea>
+
+    <button onclick="generarReporte()">Generar Reporte</button>
+    <button onclick="enviarWhatsApp()">Enviar por WhatsApp</button>
+    <button onclick="copiarAlPortapapeles()">Copiar al portapapeles</button>
+  </div>
+
+  <h2>Reporte generado</h2>
+  <pre id="output"></pre>
+
+  <script>
+    function contarVehiculos(texto) {
+      return texto.split('\n').filter(linea => linea.trim().startsWith('-')).length;
+    }
+
+    function generarReporte() {
+      const turno = document.getElementById('turno').value;
+      const agua = document.getElementById('agua').value;
+      const caeAgua = agua === 'SÍ' ? '*SI CAE AGUA* 🚰' : '*NO CAE AGUA* 🚱';
+      const recirculador = document.getElementById('recirculador').value;
+      const tinacosGrandes = document.getElementById('tinacosGrandes').value;
+      const tinacosChicos = document.getElementById('tinacosChicos').value;
+      const cisterna = document.getElementById('cisterna').value;
+      const dispensadores = document.getElementById('dispensadores').value;
+      const gas1 = document.getElementById('gas1').value;
+      const gas2 = document.getElementById('gas2').value;
+      const estacionamiento1 = document.getElementById('estacionamiento1').value;
+      const estacionamiento2 = document.getElementById('estacionamiento2').value;
+
+      const cant1 = contarVehiculos(estacionamiento1);
+      const cant2 = contarVehiculos(estacionamiento2);
+
+      const calentadoresTexto = Array.from({length: 6}, (_, i) => `#${i+1} ${document.getElementById(`cal${i+1}`).value}`).join('\n');
+
+      const reporte = `*TURNO: ${turno}*
+
+${caeAgua}
+
+Recirculador: *${recirculador}*
+
+*CAFETO*
+🛢️ *Tinacos grandes ${tinacosGrandes}*
+🛢️ *Tinacos chicos ${tinacosChicos}*
+
+CISTERNA: *${cisterna}*
+
+Calentadores: *Se quedan dos fijos*
+
+Nota: *CALENTADORES*
+${calentadoresTexto}
+
+*TANQUE DE GAS #1:*  _${gas1}%_ 🛢️
+*TANQUE DE GAS #2:*  _${gas2}%_ 🛢️
+
+Dispensadores: *${dispensadores}*
+
+🚘 *ESTACIONAMIENTO: POSADA DEL CAFETO - ${cant1}*
+${estacionamiento1}
+
+🚘 *ESTACIONAMIENTO: NIEBLA - ${cant2}*
+${estacionamiento2}`;
+
+      document.getElementById('output').textContent = reporte;
+    }
+
+    function enviarWhatsApp() {
+      const mensaje = document.getElementById('output').textContent;
+      navigator.clipboard.writeText(mensaje).then(() => {
+        alert('Reporte copiado al portapapeles. Ahora será abierto WhatsApp.\nPega (Ctrl+V) en el chat deseado.');
+        window.open('https://wa.me/', '_blank');
+      }).catch(err => {
+        alert('No se pudo copiar al portapapeles. Error: ' + err);
+      });
+    }
+
+    function copiarAlPortapapeles() {
+      const mensaje = document.getElementById('output').textContent;
+      navigator.clipboard.writeText(mensaje).then(() => {
+        alert('Reporte copiado al portapapeles.');
+      }).catch(err => {
+        alert('No se pudo copiar al portapapeles. Error: ' + err);
+      });
+    }
+  </script>
+</body>
+</html>
