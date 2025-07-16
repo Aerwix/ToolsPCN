@@ -120,6 +120,9 @@
       <label>Calentador #6<select id="cal6">
         <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
       </select></label>
+      <label>Calentador #7<select id="cal7">
+        <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
+      </select></label>
     </div>
 
     <label>Tanque de Gas #1</label>
@@ -171,7 +174,7 @@
       const cant1 = contarVehiculos(estacionamiento1);
       const cant2 = contarVehiculos(estacionamiento2);
 
-      const calentadoresTexto = Array.from({length: 6}, (_, i) => `#${i+1} ${document.getElementById(`cal${i+1}`).value}`).join('\n');
+      const calentadoresTexto = Array.from({length: 7}, (_, i) => `#${i+1} ${document.getElementById(`cal${i+1}`).value}`).join('\n');
 
       const reporte = `*TURNO: ${turno}*
 
