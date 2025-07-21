@@ -100,7 +100,7 @@
       <option>VACÍA</option>
     </select>
 
-    <p>Calentadores: <strong>Se quedan dos fijos</strong></p*>
+    <p>Calentadores: <strong>Se quedan dos fijos</strong></p>
     <div class="calentador-group">
       <label>Calentador #1<select id="cal1">
         <option>APAGADO</option><option>FRÍO</option><option>CALIENTE</option>
@@ -157,6 +157,32 @@
       return texto.split('\n').filter(linea => linea.trim().startsWith('-')).length;
     }
 
+    function categorizarCalentadores() {
+      const estados = {
+        'APAGADO': [],
+        'FRÍO': [],
+        'CALIENTE': []
+      };
+
+      for (let i = 1; i <= 7; i++) {
+        const estado = document.getElementById(`cal${i}`).value;
+        estados[estado].push(`#${i}`);
+      }
+
+      let resultado = '';
+      if (estados.APAGADO.length > 0) {
+        resultado += `*APAGADO:* ${estados.APAGADO.join(', ')}\n`;
+      }
+      if (estados.FRÍO.length > 0) {
+        resultado += `*FRÍO:* ${estados.FRÍO.join(', ')}\n`;
+      }
+      if (estados.CALIENTE.length > 0) {
+        resultado += `*CALIENTE:* ${estados.CALIENTE.join(', ')}\n`;
+      }
+
+      return resultado.trim();
+    }
+
     function generarReporte() {
       const turno = document.getElementById('turno').value;
       const agua = document.getElementById('agua').value;
@@ -174,7 +200,7 @@
       const cant1 = contarVehiculos(estacionamiento1);
       const cant2 = contarVehiculos(estacionamiento2);
 
-      const calentadoresTexto = Array.from({length: 7}, (_, i) => `#${i+1} ${document.getElementById(`cal${i+1}`).value}`).join('\n');
+      const calentadoresTexto = categorizarCalentadores();
 
       const reporte = `*TURNO: ${turno}*
 
@@ -190,7 +216,7 @@ CISTERNA: *${cisterna}*
 
 Calentadores: *Se quedan dos fijos*
 
-Nota: *CALENTADORES*
+Nota: Los calentadores # 1 y # 7 son los grandes.
 ${calentadoresTexto}
 
 *TANQUE DE GAS #1:*  _${gas1}%_ 🛢️
