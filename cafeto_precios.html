@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posada Cafeto - Buscador de Habitaciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .filters {
+            background: #f8f9fa;
+            padding: 30px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-item label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+            user-select: none;
+            padding: 12px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-label:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .checkbox-label.tarifa-rack {
+            border-color: #ffc107;
+        }
+
+        .checkbox-label.tarifa-rack:hover {
+            background: #fff8e1;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        select, input {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        .tarifa-indicator {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .results {
+            padding: 30px;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: 0 10px 20px rgba(240, 147, 251, 0.3);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.95;
+            margin-top: 5px;
+        }
+
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .room-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .room-card.occupied {
+            background: #f8f9fa;
+            opacity: 0.7;
+            border-color: #dc3545;
+        }
+
+        .room-card.occupied::after {
+            content: "OCUPADA";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 2em;
+            font-weight: bold;
+            color: #dc3545;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .room-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .room-type {
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .room-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 15px;
+        }
+
+        .room-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95em;
+            color: #495057;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .climate-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .with-climate {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .without-climate {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .occupied-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #dc3545;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .no-results h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .price-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .price-tag.rack {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .room-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏨 Posada Cafeto</h1>
+            <p>Sistema de Búsqueda de Habitaciones</p>
+        </div>
+
+        <div class="filters">
+            <div class="tarifa-indicator" id="tarifaIndicator">
+                💰 Tarifa Actual: PUENTE (Temporada Alta)
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label for="personas">👥 Número de Personas</label>
+                    <select id="personas">
+                        <option value="">Todas</option>
+                        <option value="1">1 persona</option>
+                        <option value="2">2 personas</option>
+                        <option value="3">3 personas</option>
+                        <option value="4">4 personas</option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label for="tipo">🛏️ Tipo de Habitación</label>
+                    <select id="tipo">
+                        <option value="">Todos los tipos</option>
+                        <option value="sencilla">Sencilla</option>
+                        <option value="doble">Doble</option>
+                        <option value="triple">Triple</option>
+                        <option value="cuadruple">Cuádruple</option>
+                        <option value="suite">Suite</option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label for="clima">❄️ Aire Acondicionado</label>
+                    <select id="clima">
+                        <option value="">Sin preferencia</option>
+                        <option value="con">Con clima</option>
+                        <option value="sin">Sin clima</option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="soloDisponibles">
+                        <span>🟢 Mostrar solo disponibles</span>
+                    </label>
+                </div>
+
+                <div class="filter-item">
+                    <label class="checkbox-label tarifa-rack">
+                        <input type="checkbox" id="tarifaRack">
+                        <span>💵 Cambiar a Tarifa RACK (Regular)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button onclick="filtrarHabitaciones()">🔍 Buscar Habitaciones</button>
+                <button class="secondary" onclick="limpiarFiltros()">🔄 Limpiar Filtros</button>
+                <button class="danger" onclick="limpiarOcupadas()">🏨 Desocupar Todas</button>
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="stats" id="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalRooms">0</span>
+                    <span class="stat-label">Habitaciones Encontradas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="availableRooms">0</span>
+                    <span class="stat-label">Disponibles</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="withClimate">0</span>
+                    <span class="stat-label">Con Clima</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="withoutClimate">0</span>
+                    <span class="stat-label">Sin Clima</span>
+                </div>
+            </div>
+
+            <div class="room-grid" id="roomGrid">
+                <!-- Las habitaciones se mostrarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos de habitaciones actualizada con nuevas tarifas
+        const habitaciones = {
+            sencilla: {
+                nombre: "Habitación Sencilla",
+                habitaciones: [101, 104, 106, 107, 108, 112, 114, 115, 116, 125, 126, 127, 128, 129],
+                camas: "1x Cama Matrimonial",
+                maxPersonas: 2,
+                conClima: [125, 126, 127, 128, 129],
+                sinClima: [101, 104, 106, 107, 108, 112, 114, 115, 116],
+                tarifas: {
+                    rack: {
+                        sin_clima: [870, 950],
+                        con_clima: [980, 1060]
+                    },
+                    puente: {
+                        sin_clima: [960, 1050],
+                        con_clima: [1080, 1170]
+                    }
+                }
+            },
+            doble: {
+                nombre: "Habitación Doble",
+                habitaciones: [109, 117, 121, 123, 124],
+                camas: "2x Cama Individual",
+                maxPersonas: 2,
+                conClima: [109, 121, 123, 124],
+                sinClima: [117],
+                tarifas: {
+                    rack: {
+                        sin_clima: [980, 1060],
+                        con_clima: [1090, 1170]
+                    },
+                    puente: {
+                        sin_clima: [1080, 1170],
+                        con_clima: [1200, 1290]
+                    }
+                }
+            },
+            triple: {
+                nombre: "Habitación Triple",
+                habitaciones: [103, 110, 120, 122, 131],
+                camas: "1x Cama Matrimonial, 1x Individual",
+                maxPersonas: 3,
+                conClima: [110, 122, 131],
+                sinClima: [103, 120],
+                tarifas: {
+                    rack: {
+                        sin_clima: [1090, 1170, 1350],
+                        con_clima: [1200, 1280, 1460]
+                    },
+                    puente: {
+                        sin_clima: [1200, 1290, 1490],
+                        con_clima: [1320, 1410, 1610]
+                    }
+                }
+            },
+            cuadruple: {
+                nombre: "Habitación Cuádruple",
+                habitaciones: [102, 105, 132],
+                camas: "2x Cama Matrimonial",
+                maxPersonas: 4,
+                conClima: [132],
+                sinClima: [102, 105],
+                tarifas: {
+                    rack: {
+                        sin_clima: [1210, 1290, 1470, 1650],
+                        con_clima: [1320, 1400, 1580, 1760]
+                    },
+                    puente: {
+                        sin_clima: [1330, 1420, 1620, 1820],
+                        con_clima: [1450, 1540, 1740, 1940]
+                    }
+                }
+            },
+            suite: {
+                nombre: "Suite",
+                habitaciones: [134, 135],
+                camas: "1x Matrimonial, 1x Individual, 1x Sofá Cama",
+                maxPersonas: 4,
+                conClima: [134, 135],
+                sinClima: [],
+                tarifas: {
+                    rack: {
+                        sin_clima: [1310, 1390, 1570, 1750],
+                        con_clima: [1420, 1500, 1680, 1860]
+                    },
+                    puente: {
+                        sin_clima: [1450, 1530, 1730, 1930],
+                        con_clima: [1560, 1650, 1850, 2050]
+                    }
+                }
+            }
+        };
+
+        // Almacenar habitaciones ocupadas
+        let habitacionesOcupadas = [];
+
+        // Obtener el precio según personas, tipo de tarifa y clima
+        function obtenerPrecio(tipoHab, numPersonas, tieneClima, usarTarifaRack) {
+            const tipo = Object.keys(habitaciones).find(key => 
+                habitaciones[key].nombre === tipoHab
+            );
+            
+            if (!tipo || !numPersonas) return null;
+            
+            const habitacion = habitaciones[tipo];
+            const tipoTarifa = usarTarifaRack ? 'rack' : 'puente';
+            const climaKey = tieneClima ? 'con_clima' : 'sin_clima';
+            
+            // Obtener el array de precios según el clima
+            const precios = habitacion.tarifas[tipoTarifa][climaKey];
+            
+            // El índice es numPersonas - 1 (array empieza en 0)
+            const precio = precios[numPersonas - 1];
+            
+            return precio || precios[precios.length - 1]; // Si no hay precio para ese número, usar el último
+        }
+
+        function toggleOcupada(numHab) {
+            const index = habitacionesOcupadas.indexOf(numHab);
+            if (index > -1) {
+                habitacionesOcupadas.splice(index, 1);
+            } else {
+                habitacionesOcupadas.push(numHab);
+            }
+            // Mantener los filtros actuales al marcar/desmarcar
+            filtrarHabitaciones();
+        }
+
+        function limpiarOcupadas() {
+            // Limpiar el array de ocupadas
+            habitacionesOcupadas = [];
+            // Mantener los filtros actuales al desocupar todas
+            filtrarHabitaciones();
+        }
+
+        // Actualizar indicador de tarifa
+        document.getElementById('tarifaRack').addEventListener('change', function() {
+            const indicator = document.getElementById('tarifaIndicator');
+            if (this.checked) {
+                indicator.textContent = '💵 Tarifa Actual: RACK (Regular)';
+                indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+            } else {
+                indicator.textContent = '💰 Tarifa Actual: PUENTE (Temporada Alta)';
+                indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+            }
+            filtrarHabitaciones();
+        });
+
+        function filtrarHabitaciones() {
+            const numPersonas = document.getElementById('personas').value;
+            const tipoHab = document.getElementById('tipo').value;
+            const climaPref = document.getElementById('clima').value;
+            const soloDisponibles = document.getElementById('soloDisponibles').checked;
+            const usarTarifaRack = document.getElementById('tarifaRack').checked;
+
+            let resultados = [];
+
+            // Si no hay ningún filtro, mostrar todas
+            if (!numPersonas && !tipoHab && !climaPref && !soloDisponibles) {
+                mostrarTodasHabitaciones();
+                return;
+            }
+
+            // Iterar sobre todos los tipos de habitación
+            for (const [tipo, data] of Object.entries(habitaciones)) {
+                // Filtrar por tipo si se especificó
+                if (tipoHab && tipo !== tipoHab) continue;
+
+                // Filtrar por número de personas
+                if (numPersonas && parseInt(numPersonas) > data.maxPersonas) continue;
+
+                // Determinar qué habitaciones mostrar según el clima
+                let habsAMostrar = [];
+                
+                if (climaPref === 'con') {
+                    habsAMostrar = data.conClima;
+                } else if (climaPref === 'sin') {
+                    habsAMostrar = data.sinClima;
+                } else {
+                    habsAMostrar = data.habitaciones;
+                }
+
+                // Filtrar por disponibilidad si está marcado
+                if (soloDisponibles) {
+                    habsAMostrar = habsAMostrar.filter(h => !habitacionesOcupadas.includes(h));
+                }
+
+                // Agregar cada habitación a los resultados
+                habsAMostrar.forEach(numHab => {
+                    const tieneClima = data.conClima.includes(numHab);
+                    const personasParaPrecio = numPersonas || 1; // Si no se especifica, mostrar precio para 1 persona
+                    
+                    resultados.push({
+                        numero: numHab,
+                        tipo: data.nombre,
+                        camas: data.camas,
+                        maxPersonas: data.maxPersonas,
+                        tieneClima: tieneClima,
+                        tarifa: obtenerPrecio(data.nombre, parseInt(personasParaPrecio), tieneClima, usarTarifaRack),
+                        ocupada: habitacionesOcupadas.includes(numHab),
+                        numPersonasSeleccionadas: personasParaPrecio
+                    });
+                });
+            }
+
+            // Ordenar por número de habitación
+            resultados.sort((a, b) => a.numero - b.numero);
+
+            // Mostrar resultados
+            mostrarResultados(resultados);
+        }
+
+        function mostrarResultados(resultados) {
+            const grid = document.getElementById('roomGrid');
+            const disponibles = resultados.filter(r => !r.ocupada).length;
+            const usarTarifaRack = document.getElementById('tarifaRack').checked;
+            const stats = {
+                total: resultados.length,
+                disponibles: disponibles,
+                conClima: resultados.filter(r => r.tieneClima).length,
+                sinClima: resultados.filter(r => !r.tieneClima).length
+            };
+
+            // Actualizar estadísticas
+            document.getElementById('totalRooms').textContent = stats.total;
+            document.getElementById('availableRooms').textContent = stats.disponibles;
+            document.getElementById('withClimate').textContent = stats.conClima;
+            document.getElementById('withoutClimate').textContent = stats.sinClima;
+
+            // Limpiar grid
+            grid.innerHTML = '';
+
+            if (resultados.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <h3>😕 No se encontraron habitaciones</h3>
+                        <p>Intenta ajustar los filtros de búsqueda</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Crear cards para cada habitación
+            resultados.forEach(hab => {
+                const card = document.createElement('div');
+                card.className = `room-card ${hab.ocupada ? 'occupied' : ''}`;
+                card.onclick = () => toggleOcupada(hab.numero);
+                
+                const personasText = hab.numPersonasSeleccionadas > 1 ? 
+                    `${hab.numPersonasSeleccionadas} personas` : 
+                    `${hab.numPersonasSeleccionadas} persona`;
+                
+                card.innerHTML = `
+                    ${hab.ocupada ? '<div class="occupied-badge">🔴 OCUPADA</div>' : ''}
+                    <div class="climate-badge ${hab.tieneClima ? 'with-climate' : 'without-climate'}">
+                        ${hab.tieneClima ? '❄️ Con Clima' : '🌡️ Sin Clima'}
+                    </div>
+                    <div class="room-type">${hab.tipo}</div>
+                    <div class="room-number">Hab. ${hab.numero}</div>
+                    <div class="room-details">
+                        <div class="detail-row">
+                            <span class="icon">🛏️</span>
+                            <span>${hab.camas}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="icon">👥</span>
+                            <span>Máximo ${hab.maxPersonas} persona${hab.maxPersonas > 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="detail-row" style="margin-top: 5px;">
+                            <span class="icon">${hab.ocupada ? '🔴' : '🟢'}</span>
+                            <span style="font-weight: bold; color: ${hab.ocupada ? '#dc3545' : '#28a745'}">
+                                ${hab.ocupada ? 'OCUPADA' : 'DISPONIBLE'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="price-tag ${usarTarifaRack ? 'rack' : ''}">
+                        $${hab.tarifa} MXN/noche
+                        <div style="font-size: 0.8em; opacity: 0.9; margin-top: 3px;">
+                            Para ${personasText}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('personas').value = '';
+            document.getElementById('tipo').value = '';
+            document.getElementById('clima').value = '';
+            document.getElementById('soloDisponibles').checked = false;
+            // No limpiar el checkbox de tarifa, mantener la selección actual
+            mostrarTodasHabitaciones();
+        }
+
+        function mostrarTodasHabitaciones() {
+            let todasLasHabitaciones = [];
+            const usarTarifaRack = document.getElementById('tarifaRack').checked;
+            const numPersonas = document.getElementById('personas').value || 1;
+            
+            for (const [tipo, data] of Object.entries(habitaciones)) {
+                data.habitaciones.forEach(numHab => {
+                    const tieneClima = data.conClima.includes(numHab);
+                    todasLasHabitaciones.push({
+                        numero: numHab,
+                        tipo: data.nombre,
+                        camas: data.camas,
+                        maxPersonas: data.maxPersonas,
+                        tieneClima: tieneClima,
+                        tarifa: obtenerPrecio(data.nombre, parseInt(numPersonas), tieneClima, usarTarifaRack),
+                        ocupada: habitacionesOcupadas.includes(numHab),
+                        numPersonasSeleccionadas: parseInt(numPersonas)
+                    });
+                });
+            }
+            
+            todasLasHabitaciones.sort((a, b) => a.numero - b.numero);
+            mostrarResultados(todasLasHabitaciones);
+        }
+
+        // Mostrar todas las habitaciones al cargar
+        window.addEventListener('load', mostrarTodasHabitaciones);
+    </script>
+</body>
+</html>
