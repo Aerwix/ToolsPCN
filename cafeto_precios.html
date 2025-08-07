@@ -393,6 +393,26 @@
                 </div>
 
                 <div class="filter-item">
+                    <label for="noches">🌙 Número de Noches</label>
+                    <select id="noches">
+                        <option value="1">1 noche</option>
+                        <option value="2">2 noches</option>
+                        <option value="3">3 noches</option>
+                        <option value="4">4 noches</option>
+                        <option value="5">5 noches</option>
+                        <option value="6">6 noches</option>
+                        <option value="7">7 noches (1 semana)</option>
+                        <option value="8">8 noches</option>
+                        <option value="9">9 noches</option>
+                        <option value="10">10 noches</option>
+                        <option value="11">11 noches</option>
+                        <option value="12">12 noches</option>
+                        <option value="13">13 noches</option>
+                        <option value="14">14 noches (2 semanas)</option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
                     <label class="checkbox-label">
                         <input type="checkbox" id="soloDisponibles">
                         <span>🟢 Mostrar solo disponibles</span>
@@ -403,6 +423,13 @@
                     <label class="checkbox-label tarifa-rack">
                         <input type="checkbox" id="tarifaRack">
                         <span>💵 Cambiar a Tarifa RACK (Regular)</span>
+                    </label>
+                </div>
+
+                <div class="filter-item">
+                    <label class="checkbox-label" style="border-color: #28a745;">
+                        <input type="checkbox" id="descuentoEspecial">
+                        <span>🎓 Descuento UV/INAPAM (-10%)</span>
                     </label>
                 </div>
             </div>
@@ -539,7 +566,7 @@
         let habitacionesOcupadas = [];
 
         // Obtener el precio según personas, tipo de tarifa y clima
-        function obtenerPrecio(tipoHab, numPersonas, tieneClima, usarTarifaRack) {
+        function obtenerPrecio(tipoHab, numPersonas, tieneClima, usarTarifaRack, numNoches, aplicarDescuento) {
             const tipo = Object.keys(habitaciones).find(key => 
                 habitaciones[key].nombre === tipoHab
             );
@@ -554,9 +581,17 @@
             const precios = habitacion.tarifas[tipoTarifa][climaKey];
             
             // El índice es numPersonas - 1 (array empieza en 0)
-            const precio = precios[numPersonas - 1];
+            let precio = precios[numPersonas - 1] || precios[precios.length - 1];
             
-            return precio || precios[precios.length - 1]; // Si no hay precio para ese número, usar el último
+            // Calcular precio por número de noches
+            precio = precio * (numNoches || 1);
+            
+            // Aplicar descuento si está activado
+            if (aplicarDescuento) {
+                precio = precio * 0.9; // 10% de descuento
+            }
+            
+            return Math.round(precio); // Redondear para evitar decimales extraños
         }
 
         function toggleOcupada(numHab) {
@@ -580,15 +615,41 @@
         // Actualizar indicador de tarifa
         document.getElementById('tarifaRack').addEventListener('change', function() {
             const indicator = document.getElementById('tarifaIndicator');
-            if (this.checked) {
-                indicator.textContent = '💵 Tarifa Actual: RACK (Regular)';
-                indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
-            } else {
-                indicator.textContent = '💰 Tarifa Actual: PUENTE (Temporada Alta)';
-                indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+            const descuentoActivo = document.getElementById('descuentoEspecial').checked;
+            let texto = this.checked ? '💵 Tarifa: RACK (Regular)' : '💰 Tarifa: PUENTE (Temporada Alta)';
+            
+            if (descuentoActivo) {
+                texto += ' | 🎓 -10% Descuento Aplicado';
             }
+            
+            indicator.textContent = texto;
+            indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
             filtrarHabitaciones();
         });
+        
+        // Listener para el descuento especial
+        document.getElementById('descuentoEspecial').addEventListener('change', function() {
+            const indicator = document.getElementById('tarifaIndicator');
+            const tarifaRack = document.getElementById('tarifaRack').checked;
+            let texto = tarifaRack ? '💵 Tarifa: RACK (Regular)' : '💰 Tarifa: PUENTE (Temporada Alta)';
+            
+            if (this.checked) {
+                texto += ' | 🎓 -10% Descuento Aplicado';
+                indicator.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            } else {
+                indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+            }
+            
+            indicator.textContent = texto;
+            filtrarHabitaciones();
+        });
+        
+        // Listeners para actualización automática
+        document.getElementById('noches').addEventListener('change', filtrarHabitaciones);
+        document.getElementById('personas').addEventListener('change', filtrarHabitaciones);
+        document.getElementById('tipo').addEventListener('change', filtrarHabitaciones);
+        document.getElementById('clima').addEventListener('change', filtrarHabitaciones);
+        document.getElementById('soloDisponibles').addEventListener('change', filtrarHabitaciones);
 
         function filtrarHabitaciones() {
             const numPersonas = document.getElementById('personas').value;
@@ -596,6 +657,8 @@
             const climaPref = document.getElementById('clima').value;
             const soloDisponibles = document.getElementById('soloDisponibles').checked;
             const usarTarifaRack = document.getElementById('tarifaRack').checked;
+            const numNoches = parseInt(document.getElementById('noches').value) || 1;
+            const aplicarDescuento = document.getElementById('descuentoEspecial').checked;
 
             let resultados = [];
 
@@ -640,9 +703,12 @@
                         camas: data.camas,
                         maxPersonas: data.maxPersonas,
                         tieneClima: tieneClima,
-                        tarifa: obtenerPrecio(data.nombre, parseInt(personasParaPrecio), tieneClima, usarTarifaRack),
+                        tarifa: obtenerPrecio(data.nombre, parseInt(personasParaPrecio), tieneClima, usarTarifaRack, numNoches, aplicarDescuento),
+                        precioPorNoche: obtenerPrecio(data.nombre, parseInt(personasParaPrecio), tieneClima, usarTarifaRack, 1, aplicarDescuento),
                         ocupada: habitacionesOcupadas.includes(numHab),
-                        numPersonasSeleccionadas: personasParaPrecio
+                        numPersonasSeleccionadas: personasParaPrecio,
+                        numNoches: numNoches,
+                        descuentoAplicado: aplicarDescuento
                     });
                 });
             }
@@ -694,6 +760,36 @@
                     `${hab.numPersonasSeleccionadas} personas` : 
                     `${hab.numPersonasSeleccionadas} persona`;
                 
+                const nochesText = hab.numNoches > 1 ? 
+                    `${hab.numNoches} noches` : 
+                    `${hab.numNoches} noche`;
+                
+                let precioHTML = '';
+                if (hab.numNoches > 1) {
+                    precioHTML = `
+                        <div class="price-tag ${usarTarifaRack ? 'rack' : ''}" ${hab.descuentoAplicado ? 'style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);"' : ''}>
+                            <div style="font-size: 1.2em;">
+                                ${hab.tarifa.toLocaleString('es-MX')} MXN total
+                            </div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-top: 3px;">
+                                ${personasText} × ${nochesText}
+                            </div>
+                            <div style="font-size: 0.8em; opacity: 0.8; margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 3px;">
+                                ${hab.precioPorNoche}/noche ${hab.descuentoAplicado ? '(-10%)' : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    precioHTML = `
+                        <div class="price-tag ${usarTarifaRack ? 'rack' : ''}" ${hab.descuentoAplicado ? 'style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);"' : ''}>
+                            ${hab.tarifa.toLocaleString('es-MX')} MXN/noche
+                            <div style="font-size: 0.8em; opacity: 0.9; margin-top: 3px;">
+                                Para ${personasText} ${hab.descuentoAplicado ? '(-10%)' : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
                 card.innerHTML = `
                     ${hab.ocupada ? '<div class="occupied-badge">🔴 OCUPADA</div>' : ''}
                     <div class="climate-badge ${hab.tieneClima ? 'with-climate' : 'without-climate'}">
@@ -716,13 +812,14 @@
                                 ${hab.ocupada ? 'OCUPADA' : 'DISPONIBLE'}
                             </span>
                         </div>
-                    </div>
-                    <div class="price-tag ${usarTarifaRack ? 'rack' : ''}">
-                        $${hab.tarifa} MXN/noche
-                        <div style="font-size: 0.8em; opacity: 0.9; margin-top: 3px;">
-                            Para ${personasText}
+                        ${hab.descuentoAplicado ? `
+                        <div class="detail-row" style="margin-top: 3px;">
+                            <span class="icon">🎓</span>
+                            <span style="color: #28a745; font-weight: bold;">10% Descuento Aplicado</span>
                         </div>
+                        ` : ''}
                     </div>
+                    ${precioHTML}
                 `;
                 grid.appendChild(card);
             });
@@ -733,7 +830,8 @@
             document.getElementById('tipo').value = '';
             document.getElementById('clima').value = '';
             document.getElementById('soloDisponibles').checked = false;
-            // No limpiar el checkbox de tarifa, mantener la selección actual
+            document.getElementById('noches').value = '1';
+            // No limpiar el checkbox de tarifa ni el de descuento, mantener las selecciones actuales
             mostrarTodasHabitaciones();
         }
 
@@ -741,6 +839,8 @@
             let todasLasHabitaciones = [];
             const usarTarifaRack = document.getElementById('tarifaRack').checked;
             const numPersonas = document.getElementById('personas').value || 1;
+            const numNoches = parseInt(document.getElementById('noches').value) || 1;
+            const aplicarDescuento = document.getElementById('descuentoEspecial').checked;
             
             for (const [tipo, data] of Object.entries(habitaciones)) {
                 data.habitaciones.forEach(numHab => {
@@ -751,9 +851,12 @@
                         camas: data.camas,
                         maxPersonas: data.maxPersonas,
                         tieneClima: tieneClima,
-                        tarifa: obtenerPrecio(data.nombre, parseInt(numPersonas), tieneClima, usarTarifaRack),
+                        tarifa: obtenerPrecio(data.nombre, parseInt(numPersonas), tieneClima, usarTarifaRack, numNoches, aplicarDescuento),
+                        precioPorNoche: obtenerPrecio(data.nombre, parseInt(numPersonas), tieneClima, usarTarifaRack, 1, aplicarDescuento),
                         ocupada: habitacionesOcupadas.includes(numHab),
-                        numPersonasSeleccionadas: parseInt(numPersonas)
+                        numPersonasSeleccionadas: parseInt(numPersonas),
+                        numNoches: numNoches,
+                        descuentoAplicado: aplicarDescuento
                     });
                 });
             }
