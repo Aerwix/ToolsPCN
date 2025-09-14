@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Estacionamiento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .parking-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .location-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .location-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.full {
+            background: #f44336;
+        }
+
+        .parking-spots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .spot {
+            aspect-ratio: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .spot.free {
+            background: #e8f5e9;
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .spot.occupied {
+            background: #ffebee;
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .spot:hover {
+            transform: scale(1.1);
+        }
+
+        .cars-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .cars-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .cars-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .cars-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-edit:hover, .btn-delete:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .expired {
+            background: #fff3cd;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                background: #fff3cd;
+            }
+            50% {
+                background: #ffe8a1;
+            }
+        }
+
+        .timer {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .no-spot {
+            background: #f0f0f0;
+            color: #999;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .parking-status {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Sistema de Gestión de Estacionamiento</h1>
+        
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCars">0</div>
+                <div class="stat-label">Total de Autos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="availableSpots">15</div>
+                <div class="stat-label">Espacios Disponibles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="expiringToday">0</div>
+                <div class="stat-label">Vencen Hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="noSpotCars">0</div>
+                <div class="stat-label">Sin Plaza Asignada</div>
+            </div>
+        </div>
+
+        <!-- Estado de Estacionamientos -->
+        <div class="parking-status">
+            <div class="location-card">
+                <h3>
+                    🏨 Posada del Cafeto
+                    <span class="status-badge" id="cafetoBadge">7/7 Libres</span>
+                </h3>
+                <div class="parking-spots" id="cafetoSpots"></div>
+            </div>
+            <div class="location-card">
+                <h3>
+                    🏢 Niebla Suites
+                    <span class="status-badge" id="nieblaBadge">8/8 Libres</span>
+                </h3>
+                <div class="parking-spots" id="nieblaSpots"></div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Formulario -->
+            <div class="card form-section">
+                <h2>Registrar Auto</h2>
+                <form id="carForm">
+                    <input type="hidden" id="editId" value="">
+                    
+                    <div class="form-group">
+                        <label for="model">Modelo del Auto:</label>
+                        <input type="text" id="model" required placeholder="Toyota Corolla, Honda Civic, etc.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="color">Color:</label>
+                        <input type="text" id="color" required placeholder="Rojo, Azul, Blanco, etc.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plates">Placas:</label>
+                        <input type="text" id="plates" required placeholder="ABC-123">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="room">Habitación:</label>
+                        <input type="text" id="room" required placeholder="101, 202, etc.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="location">Ubicación:</label>
+                        <select id="location" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="cafeto">Posada del Cafeto</option>
+                            <option value="niebla">Niebla Suites</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="spotNumber">Número de Plaza:</label>
+                        <select id="spotNumber" required>
+                            <option value="">Primero selecciona ubicación</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="entryDate">Fecha de Entrada (Check-in 15:00 / 3:00 PM):</label>
+                        <input type="date" id="entryDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exitDate">Fecha de Salida (Check-out 12:00 PM / Mediodía):</label>
+                        <input type="date" id="exitDate" required>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn">Registrar Auto</button>
+                </form>
+            </div>
+
+            <!-- Tabla de Autos -->
+            <div class="card">
+                <h2>Autos Registrados</h2>
+                <div style="overflow-x: auto;">
+                    <table class="cars-table">
+                        <thead>
+                            <tr>
+                                <th>Placas</th>
+                                <th>Modelo</th>
+                                <th>Color</th>
+                                <th>Habitación</th>
+                                <th>Ubicación</th>
+                                <th>Plaza</th>
+                                <th>Entrada</th>
+                                <th>Salida</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="carsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado de la aplicación
+        let cars = [];
+        let editingId = null;
+        const CAFETO_SPOTS = 7;
+        const NIEBLA_SPOTS = 8;
+
+        // Función para formatear fechas locales
+        function getLocalDateString(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            renderParkingSpots();
+            updateTable();
+            updateStats();
+            setInterval(checkExpiredCars, 60000); // Verificar cada minuto
+            checkExpiredCars(); // Verificar inmediatamente
+            
+            // Establecer fecha de entrada como hoy y fecha de salida como mañana
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+            
+            document.getElementById('entryDate').value = getLocalDateString(today);
+            document.getElementById('exitDate').value = getLocalDateString(tomorrow);
+        });
+
+        // Manejar cambio de ubicación
+        document.getElementById('location').addEventListener('change', function() {
+            updateSpotOptions();
+        });
+
+        // Actualizar opciones de plaza según ubicación
+        function updateSpotOptions() {
+            const location = document.getElementById('location').value;
+            const spotSelect = document.getElementById('spotNumber');
+            spotSelect.innerHTML = '<option value="">Seleccionar plaza...</option>';
+            
+            if (!location) return;
+            
+            // Agregar opción "Sin Plaza"
+            const noSpotOption = document.createElement('option');
+            noSpotOption.value = '0';
+            noSpotOption.textContent = '-- Sin Plaza Asignada --';
+            noSpotOption.style.fontStyle = 'italic';
+            spotSelect.appendChild(noSpotOption);
+            
+            const maxSpots = location === 'cafeto' ? CAFETO_SPOTS : NIEBLA_SPOTS;
+            const occupiedSpots = cars
+                .filter(car => car.location === location && !isCarExpired(car) && car.spotNumber > 0)
+                .map(car => car.spotNumber);
+            
+            for (let i = 1; i <= maxSpots; i++) {
+                if (!occupiedSpots.includes(i) || (editingId && cars.find(c => c.id === editingId)?.spotNumber === i)) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Plaza ${i}`;
+                    spotSelect.appendChild(option);
+                }
+            }
+        }
+
+        // Renderizar espacios de estacionamiento
+        function renderParkingSpots() {
+            const cafetoContainer = document.getElementById('cafetoSpots');
+            const nieblaContainer = document.getElementById('nieblaSpots');
+            
+            cafetoContainer.innerHTML = '';
+            nieblaContainer.innerHTML = '';
+            
+            // Obtener autos activos con plaza asignada
+            const activeCars = cars.filter(car => !isCarExpired(car) && car.spotNumber > 0);
+            const cafetoOccupied = activeCars.filter(car => car.location === 'cafeto').map(c => c.spotNumber);
+            const nieblaOccupied = activeCars.filter(car => car.location === 'niebla').map(c => c.spotNumber);
+            
+            // Renderizar Posada del Cafeto
+            for (let i = 1; i <= CAFETO_SPOTS; i++) {
+                const spot = document.createElement('div');
+                spot.className = cafetoOccupied.includes(i) ? 'spot occupied' : 'spot free';
+                spot.textContent = i;
+                spot.title = cafetoOccupied.includes(i) ? 'Ocupado' : 'Libre';
+                if (cafetoOccupied.includes(i)) {
+                    const car = activeCars.find(c => c.location === 'cafeto' && c.spotNumber === i);
+                    spot.title = `${car.plates} - ${car.model} - Hab. ${car.room}`;
+                }
+                cafetoContainer.appendChild(spot);
+            }
+            
+            // Renderizar Niebla Suites
+            for (let i = 1; i <= NIEBLA_SPOTS; i++) {
+                const spot = document.createElement('div');
+                spot.className = nieblaOccupied.includes(i) ? 'spot occupied' : 'spot free';
+                spot.textContent = i;
+                spot.title = nieblaOccupied.includes(i) ? 'Ocupado' : 'Libre';
+                if (nieblaOccupied.includes(i)) {
+                    const car = activeCars.find(c => c.location === 'niebla' && c.spotNumber === i);
+                    spot.title = `${car.plates} - ${car.model} - Hab. ${car.room}`;
+                }
+                nieblaContainer.appendChild(spot);
+            }
+            
+            // Actualizar badges
+            const cafetoFree = CAFETO_SPOTS - cafetoOccupied.length;
+            const nieblaFree = NIEBLA_SPOTS - nieblaOccupied.length;
+            
+            const cafetoBadge = document.getElementById('cafetoBadge');
+            const nieblaBadge = document.getElementById('nieblaBadge');
+            
+            cafetoBadge.textContent = `${cafetoFree}/${CAFETO_SPOTS} Libres`;
+            cafetoBadge.className = cafetoFree === 0 ? 'status-badge full' : 'status-badge';
+            
+            nieblaBadge.textContent = `${nieblaFree}/${NIEBLA_SPOTS} Libres`;
+            nieblaBadge.className = nieblaFree === 0 ? 'status-badge full' : 'status-badge';
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('carForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                plates: document.getElementById('plates').value.toUpperCase(),
+                model: document.getElementById('model').value,
+                color: document.getElementById('color').value,
+                room: document.getElementById('room').value,
+                location: document.getElementById('location').value,
+                spotNumber: parseInt(document.getElementById('spotNumber').value),
+                entryDate: document.getElementById('entryDate').value,
+                exitDate: document.getElementById('exitDate').value
+            };
+            
+            // Agregar horas de check-in y check-out
+            formData.entryDateTime = new Date(formData.entryDate + 'T15:00:00'); // 3 PM
+            formData.exitDateTime = new Date(formData.exitDate + 'T12:00:00'); // 12 PM (mediodía)
+            
+            if (editingId) {
+                // Editar auto existente
+                const index = cars.findIndex(car => car.id === editingId);
+                if (index !== -1) {
+                    cars[index] = { ...formData, id: editingId };
+                }
+                editingId = null;
+                document.getElementById('submitBtn').textContent = 'Registrar Auto';
+                document.getElementById('editId').value = '';
+            } else {
+                // Agregar nuevo auto
+                formData.id = Date.now();
+                cars.push(formData);
+            }
+            
+            saveToStorage();
+            updateTable();
+            renderParkingSpots();
+            updateStats();
+            this.reset();
+            
+            // Restablecer fechas por defecto
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+            
+            document.getElementById('entryDate').value = getLocalDateString(today);
+            document.getElementById('exitDate').value = getLocalDateString(tomorrow);
+            updateSpotOptions();
+        });
+
+        // Actualizar tabla de autos
+        function updateTable() {
+            const tbody = document.getElementById('carsTableBody');
+            tbody.innerHTML = '';
+            
+            // Ordenar por fecha de salida
+            const sortedCars = [...cars].sort((a, b) => 
+                new Date(a.exitDateTime) - new Date(b.exitDateTime)
+            );
+            
+            sortedCars.forEach(car => {
+                const row = tbody.insertRow();
+                const isExpired = isCarExpired(car);
+                const isExpiring = isCarExpiring(car);
+                
+                if (isExpired) {
+                    row.className = 'expired';
+                }
+                
+                if (car.spotNumber === 0) {
+                    row.className += ' no-spot';
+                }
+                
+                row.innerHTML = `
+                    <td>${car.plates}</td>
+                    <td>${car.model}</td>
+                    <td>${car.color}</td>
+                    <td>${car.room}</td>
+                    <td>${car.location === 'cafeto' ? 'Posada del Cafeto' : 'Niebla Suites'}</td>
+                    <td>${car.spotNumber === 0 ? 'Sin Plaza' : `Plaza ${car.spotNumber}`}</td>
+                    <td>${formatDate(car.entryDate)} 15:00</td>
+                    <td>${formatDate(car.exitDate)} 12:00 (mediodía)</td>
+                    <td>
+                        ${isExpired ? '<span style="color: red;">⚠️ Vencido</span>' : 
+                          isExpiring ? '<span style="color: orange;">⏰ Por vencer</span>' : 
+                          car.spotNumber === 0 ? '<span style="color: blue;">📋 En espera</span>' :
+                          '<span style="color: green;">✓ Activo</span>'}
+                        <div class="timer">${getTimeRemaining(car)}</div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editCar(${car.id})">✏️</button>
+                            <button class="btn-delete" onclick="deleteCar(${car.id})">🗑️</button>
+                        </div>
+                    </td>
+                `;
+            });
+        }
+
+        // Verificar si un auto está vencido
+        function isCarExpired(car) {
+            return new Date() > new Date(car.exitDateTime);
+        }
+
+        // Verificar si un auto está por vencer (dentro de 24 horas)
+        function isCarExpiring(car) {
+            const now = new Date();
+            const exit = new Date(car.exitDateTime);
+            const hoursRemaining = (exit - now) / (1000 * 60 * 60);
+            return hoursRemaining > 0 && hoursRemaining <= 24;
+        }
+
+        // Obtener tiempo restante
+        function getTimeRemaining(car) {
+            const now = new Date();
+            const exit = new Date(car.exitDateTime);
+            const diff = exit - now;
+            
+            if (diff <= 0) return 'Tiempo vencido';
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            if (days > 0) return `${days} día(s) ${hours} hora(s)`;
+            return `${hours} hora(s)`;
+        }
+
+        // Verificar y eliminar autos vencidos automáticamente
+        function checkExpiredCars() {
+            const now = new Date();
+            const initialLength = cars.length;
+            
+            cars = cars.filter(car => {
+                const exitTime = new Date(car.exitDateTime);
+                // Eliminar inmediatamente después del check-out (sin tolerancia)
+                return now <= exitTime;
+            });
+            
+            if (cars.length < initialLength) {
+                saveToStorage();
+                updateTable();
+                renderParkingSpots();
+                updateStats();
+            }
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const activeCars = cars.filter(car => !isCarExpired(car));
+            const carsWithSpot = activeCars.filter(car => car.spotNumber > 0);
+            const carsWithoutSpot = activeCars.filter(car => car.spotNumber === 0);
+            const expiringToday = cars.filter(car => isCarExpiring(car)).length;
+            const totalSpots = CAFETO_SPOTS + NIEBLA_SPOTS;
+            const availableSpots = totalSpots - carsWithSpot.length;
+            
+            document.getElementById('totalCars').textContent = activeCars.length;
+            document.getElementById('availableSpots').textContent = availableSpots;
+            document.getElementById('expiringToday').textContent = expiringToday;
+            document.getElementById('noSpotCars').textContent = carsWithoutSpot.length;
+        }
+
+        // Editar auto
+        function editCar(id) {
+            const car = cars.find(c => c.id === id);
+            if (car) {
+                document.getElementById('plates').value = car.plates;
+                document.getElementById('model').value = car.model;
+                document.getElementById('color').value = car.color;
+                document.getElementById('room').value = car.room;
+                document.getElementById('location').value = car.location;
+                updateSpotOptions();
+                document.getElementById('spotNumber').value = car.spotNumber;
+                document.getElementById('entryDate').value = car.entryDate;
+                document.getElementById('exitDate').value = car.exitDate;
+                document.getElementById('editId').value = id;
+                document.getElementById('submitBtn').textContent = 'Actualizar Auto';
+                editingId = id;
+                
+                // Scroll al formulario
+                document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Eliminar auto
+        function deleteCar(id) {
+            if (confirm('¿Estás seguro de eliminar este auto?')) {
+                cars = cars.filter(car => car.id !== id);
+                saveToStorage();
+                updateTable();
+                renderParkingSpots();
+                updateStats();
+            }
+        }
+
+        // Formatear fecha
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const options = { day: '2-digit', month: 'short', year: 'numeric' };
+            return date.toLocaleDateString('es-MX', options);
+        }
+
+        // Guardar en localStorage
+        function saveToStorage() {
+            localStorage.setItem('parkingCars', JSON.stringify(cars));
+        }
+
+        // Cargar desde localStorage
+        function loadFromStorage() {
+            const stored = localStorage.getItem('parkingCars');
+            if (stored) {
+                cars = JSON.parse(stored);
+            }
+        }
+    </script>
+</body>
+</html>
