@@ -276,6 +276,15 @@
             opacity: 0.9;
         }
 
+        .clock {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.8em;
+            font-family: monospace;
+        }
+
         .no-spot {
             background: #f0f0f0;
             color: #999;
@@ -296,6 +305,9 @@
 <body>
     <div class="container">
         <h1>🚗 Sistema de Gestión de Estacionamiento</h1>
+        <div style="text-align: center; color: white; margin-bottom: 20px;">
+            <div id="mexicoClock" style="font-size: 1.2em; font-weight: 500;"></div>
+        </div>
         
         <!-- Estadísticas -->
         <div class="stats-grid">
@@ -426,6 +438,11 @@
         const CAFETO_SPOTS = 7;
         const NIEBLA_SPOTS = 8;
 
+        // Función para obtener fecha/hora en México
+        function getMexicoDate() {
+            return new Date(new Date().toLocaleString("en-US", {timeZone: "America/Mexico_City"}));
+        }
+
         // Función para formatear fechas locales
         function getLocalDateString(date) {
             const year = date.getFullYear();
@@ -434,22 +451,54 @@
             return `${year}-${month}-${day}`;
         }
 
+        // Función para actualizar el reloj
+        function updateClock() {
+            const now = getMexicoDate();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+            document.getElementById('mexicoClock').textContent = 
+                '🕐 ' + now.toLocaleString('es-MX', options) + ' (Hora de México)';
+        }
+
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
             loadFromStorage();
             renderParkingSpots();
             updateTable();
             updateStats();
-            setInterval(checkExpiredCars, 60000); // Verificar cada minuto
-            checkExpiredCars(); // Verificar inmediatamente
+            updateClock();
             
-            // Establecer fecha de entrada como hoy y fecha de salida como mañana
-            const today = new Date();
-            const tomorrow = new Date();
+            // Actualizar reloj cada segundo
+            setInterval(updateClock, 1000);
+            
+            // Actualizar tabla y estadísticas cada 30 segundos
+            setInterval(() => {
+                updateTable();
+                updateStats();
+                renderParkingSpots();
+            }, 30000);
+            
+            // Verificar autos vencidos cada minuto
+            setInterval(checkExpiredCars, 60000);
+            checkExpiredCars();
+            
+            // Establecer fecha de entrada como hoy y fecha de salida como mañana (México)
+            const today = getMexicoDate();
+            const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
             
             document.getElementById('entryDate').value = getLocalDateString(today);
             document.getElementById('exitDate').value = getLocalDateString(tomorrow);
+            
+            console.log('Sistema iniciado con horario de México City');
         });
 
         // Manejar cambio de ubicación
@@ -580,9 +629,9 @@
             updateStats();
             this.reset();
             
-            // Restablecer fechas por defecto
-            const today = new Date();
-            const tomorrow = new Date();
+            // Restablecer fechas por defecto (México)
+            const today = getMexicoDate();
+            const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
             
             document.getElementById('entryDate').value = getLocalDateString(today);
@@ -641,12 +690,13 @@
 
         // Verificar si un auto está vencido
         function isCarExpired(car) {
-            return new Date() > new Date(car.exitDateTime);
+            const now = getMexicoDate();
+            return now > new Date(car.exitDateTime);
         }
 
         // Verificar si un auto está por vencer (dentro de 24 horas)
         function isCarExpiring(car) {
-            const now = new Date();
+            const now = getMexicoDate();
             const exit = new Date(car.exitDateTime);
             const hoursRemaining = (exit - now) / (1000 * 60 * 60);
             return hoursRemaining > 0 && hoursRemaining <= 24;
@@ -654,7 +704,7 @@
 
         // Obtener tiempo restante
         function getTimeRemaining(car) {
-            const now = new Date();
+            const now = getMexicoDate();
             const exit = new Date(car.exitDateTime);
             const diff = exit - now;
             
@@ -662,14 +712,20 @@
             
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             
-            if (days > 0) return `${days} día(s) ${hours} hora(s)`;
-            return `${hours} hora(s)`;
+            if (days > 0) {
+                return `${days} día(s) ${hours} hora(s)`;
+            } else if (hours > 0) {
+                return `${hours} hora(s) ${minutes} min`;
+            } else {
+                return `${minutes} minutos`;
+            }
         }
 
         // Verificar y eliminar autos vencidos automáticamente
         function checkExpiredCars() {
-            const now = new Date();
+            const now = getMexicoDate();
             const initialLength = cars.length;
             
             cars = cars.filter(car => {
@@ -683,6 +739,7 @@
                 updateTable();
                 renderParkingSpots();
                 updateStats();
+                console.log(`${initialLength - cars.length} auto(s) eliminado(s) por vencimiento`);
             }
         }
 
